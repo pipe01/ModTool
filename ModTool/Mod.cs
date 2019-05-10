@@ -157,7 +157,10 @@ namespace ModTool
             scenesResource = new AssetBundleResource(name + " scenes", scenes);
 
             isValid = true;
+        }
 
+        public void LoadMod()
+        {
             Initialize();
 
             VerifyAssemblies();

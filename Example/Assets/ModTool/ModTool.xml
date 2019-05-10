@@ -183,6 +183,11 @@
             Occurs when a Mod has been found.
             </summary>
         </member>
+        <member name="E:ModTool.ModManager.ModPreFound">
+            <summary>
+            Occurs before a Mod's info has been loaded.
+            </summary>
+        </member>
         <member name="E:ModTool.ModManager.ModRemoved">
             <summary>
             Occurs when a Mod has been removed. The Mod will be marked invalid.
@@ -221,12 +226,6 @@
         <member name="P:ModTool.ModManager.defaultSearchDirectory">
             <summary>
             Default directory that will be searched for mods.
-            </summary>
-        </member>
-        <member name="P:ModTool.ModManager.refreshInterval">
-            <summary>
-            The interval (in seconds) between refreshing Mod search directories. 
-            Set to 0 to disable auto refreshing.
             </summary>
         </member>
         <member name="P:ModTool.ModManager.mods">

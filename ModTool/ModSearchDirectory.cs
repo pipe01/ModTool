@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ModTool.Shared;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,8 +37,6 @@ namespace ModTool
 
         private Dictionary<string, long> _modPaths;
 
-        private Thread backgroundRefresh;
-        private AutoResetEvent refreshEvent;
         private bool disposed;
 
         /// <summary>
@@ -51,11 +51,6 @@ namespace ModTool
                 throw new DirectoryNotFoundException(this.path);            
 
             _modPaths = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
-
-            refreshEvent = new AutoResetEvent(false);
-
-            backgroundRefresh = new Thread(BackgroundRefresh);
-            backgroundRefresh.Start();
         }
 
         /// <summary>
@@ -63,26 +58,7 @@ namespace ModTool
         /// </summary>
         public void Refresh()
         {
-            refreshEvent.Set();
-        }
-
-        private void BackgroundRefresh()
-        {
-            Thread.CurrentThread.IsBackground = true;
-
-            refreshEvent.WaitOne();
-
-            while(!disposed)
-            {
-                DoRefresh();
-
-                refreshEvent.WaitOne();
-            }
-        }
-
-        private void DoRefresh()
-        {
-            //LogUtility.LogDebug("Refreshing Mod search directory: " + path);
+            LogUtility.LogDebug("Refreshing Mod search directory: " + path);
 
             bool changed = false;            
 
@@ -194,8 +170,6 @@ namespace ModTool
             ModChanged = null;
 
             disposed = true;
-            refreshEvent.Set();
-            backgroundRefresh.Join();
         }
     }
 }

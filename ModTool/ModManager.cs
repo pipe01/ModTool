@@ -26,6 +26,10 @@ namespace ModTool
         /// </summary>
         public event Action<Mod> ModFound;
         /// <summary>
+        /// Occurs before a Mod's info has been loaded.
+        /// </summary>
+        public event Action<string> ModPreFound;
+        /// <summary>
         /// Occurs when a Mod has been removed. The Mod will be marked invalid.
         /// </summary>
         public event Action<Mod> ModRemoved;
@@ -60,30 +64,6 @@ namespace ModTool
         public string defaultSearchDirectory { get; private set; }
 
         /// <summary>
-        /// The interval (in seconds) between refreshing Mod search directories. 
-        /// Set to 0 to disable auto refreshing.
-        /// </summary>
-        public int refreshInterval
-        {
-            get
-            {
-                return _refreshInterval;
-            }
-            set
-            {
-                _refreshInterval = value;
-
-                StopAllCoroutines();
-
-                if (_refreshInterval < 1)
-                    return;
-
-                wait = new WaitForSeconds(_refreshInterval);
-                StartCoroutine(AutoRefreshSearchDirectories());
-            }
-        }
-
-        /// <summary>
         /// All mods that have been found in all search directories.
         /// </summary>
         public ReadOnlyCollection<Mod> mods { get; private set; }
@@ -95,7 +75,6 @@ namespace ModTool
         private List<Mod> queuedRefreshMods;
         
         private List<ModSearchDirectory> searchDirectories;
-        private int _refreshInterval;
         private WaitForSeconds wait;
         
         protected override void Awake()
@@ -124,8 +103,6 @@ namespace ModTool
 
             if (!Directory.Exists(defaultSearchDirectory))
                 Directory.CreateDirectory(defaultSearchDirectory);
-            
-            AddSearchDirectory(defaultSearchDirectory);            
         }
 
         private void OnModLoaded(Resource mod)
@@ -219,19 +196,10 @@ namespace ModTool
                 searchDirectory.Refresh();
         }
 
-        IEnumerator AutoRefreshSearchDirectories()
-        {
-            while (true)
-            {
-                RefreshSearchDirectories();
-                yield return wait;
-            }
-        }
-
         private void OnModFound(string path)
         {
             //AddMod(path);
-            ThreadPool.QueueUserWorkItem(o => AddMod(path));
+            ModPreFound?.Invoke(path);
         }
 
         private void OnModRemoved(string path)
@@ -261,12 +229,12 @@ namespace ModTool
             queuedRefreshMods.Add(mod);
         }
 
-        private void AddMod(string path)
+        public Mod AddMod(string path)
         {
             lock (_lock)
             {
                 if (_modPaths.ContainsKey(path))
-                    return;
+                    return null;
             }
 
             Mod mod = new Mod(path);
@@ -277,6 +245,8 @@ namespace ModTool
             }
 
             dispatcher.Enqueue(() => AddMod(mod), true);
+
+            return mod;
         }
 
         private void AddMod(Mod mod)
